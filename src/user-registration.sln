@@ -11,9 +11,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DomainModels", "DomainModel
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DomainServices", "DomainServices\DomainServices.csproj", "{AA644AA1-2AD9-463E-80A0-254751AF6490}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Infrastructure.Data", "Infrastructure.Data\Infrastructure.Data.csproj", "{159E3384-34A1-4220-A474-806C814E83D8}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Application.Models", "Application.Models\Application.Models.csproj", "{51076119-1321-442C-A5EE-3EB964F82BA0}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Application.Models", "Application.Models\Application.Models.csproj", "{51076119-1321-442C-A5EE-3EB964F82BA0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -37,10 +35,6 @@ Global
 		{AA644AA1-2AD9-463E-80A0-254751AF6490}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AA644AA1-2AD9-463E-80A0-254751AF6490}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AA644AA1-2AD9-463E-80A0-254751AF6490}.Release|Any CPU.Build.0 = Release|Any CPU
-		{159E3384-34A1-4220-A474-806C814E83D8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{159E3384-34A1-4220-A474-806C814E83D8}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{159E3384-34A1-4220-A474-806C814E83D8}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{159E3384-34A1-4220-A474-806C814E83D8}.Release|Any CPU.Build.0 = Release|Any CPU
 		{51076119-1321-442C-A5EE-3EB964F82BA0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{51076119-1321-442C-A5EE-3EB964F82BA0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{51076119-1321-442C-A5EE-3EB964F82BA0}.Release|Any CPU.ActiveCfg = Release|Any CPU
