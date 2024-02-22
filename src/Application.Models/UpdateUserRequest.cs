@@ -6,5 +6,5 @@ public class UpdateUserRequest
     public string? LastName { get; set; }
     public int Age { get; set; }
     public string? Email { get; set; }
-    public string? Nickname { get; set; }
+    public string? NickName { get; set; }
 }
