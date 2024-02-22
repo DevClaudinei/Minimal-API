@@ -50,6 +50,6 @@ public class UserAppService : IUserAppService
 
     public void DeleteUser(long id)
     {
-        throw new NotImplementedException();
+        _userService.DeleteUser(id);
     }
 }
