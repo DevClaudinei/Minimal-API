@@ -29,26 +29,32 @@ public class UserService : IUserService
 
     public long CreateUser(User user)
     {
-        VerifyIfEmailExists(user.Email);
-        VerifyIfNicknameExists(user.Nickname);
-
-        var parameters = new
+        using (var con = Connection)
         {
-            user.FirstName,
-            user.LastName,
-            user.Age,
-            user.Email,
-            user.Nickname,
-            user.CreatedAt
-        };
+            con.Open();
 
-        using (var con = new MySqlConnection(_connectionString))
-        {
-            const string sql = "INSERT INTO Users (FirstName, LastName, Age, Email, Nickname, CreatedAt) " +
-                "VALUES (@FirstName, @LastName, @Age, @Email, @Nickname, @CreatedAt); SELECT LAST_INSERT_ID();";
-            var id = con.ExecuteScalar<long>(sql, parameters);
+            using (var transaction = con.BeginTransaction())
+            {
+                VerifyIfEmailExists(user.Email);
+                VerifyIfNickNameExists(user.NickName);
 
-            return id;
+                var parameters = new
+                {
+                    user.FirstName,
+                    user.LastName,
+                    user.Age,
+                    user.Email,
+                    user.NickName,
+                    user.CreatedAt
+                };
+
+                const string sql = "INSERT INTO Users (FirstName, LastName, Age, Email, NickName, CreatedAt) " +
+                    "VALUES (@FirstName, @LastName, @Age, @Email, @NickName, @CreatedAt); SELECT LAST_INSERT_ID();";
+                var id = con.ExecuteScalar<long>(sql, parameters);
+
+                transaction.Commit();
+                return id;
+            }
         }
     }
 
@@ -59,48 +65,45 @@ public class UserService : IUserService
             email
         };
 
-        var emailFound = ConsultaEmailNoBanco(parameters);
+        var emailFound = VerifyIfEmailAlreadyExistsOnDatabase(parameters);
 
-        if (emailFound != null)
+        if (emailFound)
             throw new BadRequestException($"User already exists for email: {email}");
     }
 
-    private User? ConsultaEmailNoBanco(object parameters)
+    private bool VerifyIfEmailAlreadyExistsOnDatabase(object parameters)
     {
-        using (var con = new MySqlConnection(_connectionString))
-        {
-            con.Open();
+        const string sql = "SELECT * FROM Users WHERE Email = @email";
 
-            const string sql = "SELECT * FROM Users WHERE Email = @email";
-            var user = con.QuerySingleOrDefault<User>(sql, parameters);
-            
-            return user;
-        }
+        return ExecuteQuery(sql, parameters).Any();
     }
 
-    private void VerifyIfNicknameExists(string? nickname)
+    private void VerifyIfNickNameExists(string? nickname)
     {
         var parameters = new
         {
             nickname
         };
 
-        var emailFound = ConsultaNicknameNoBanco(parameters);
+        var emailFound = VerifyIfNickNameAlreadyExistsOnDatabase(parameters);
 
-        if (emailFound != null)
-            throw new BadRequestException($"User already exists for email: {nickname}");
+        if (emailFound)
+            throw new BadRequestException($"User already exists for nickname: {nickname}");
     }
 
-    private User? ConsultaNicknameNoBanco(object parameters)
+    private bool VerifyIfNickNameAlreadyExistsOnDatabase(object parameters)
+    {
+        const string sql = "SELECT * FROM Users WHERE Nickname = @nickname";
+        
+        return ExecuteQuery(sql, parameters).Any();
+    }
+
+    private IEnumerable<User> ExecuteQuery(string sql, object parameters)
     {
         using (var con = new MySqlConnection(_connectionString))
         {
             con.Open();
-
-            const string sql = "SELECT * FROM Users WHERE Nickname = @nickname";
-            var user = con.QuerySingleOrDefault<User>(sql, parameters);
-
-            return user;
+            return con.Query<User>(sql, parameters);
         }
     }
 
@@ -108,7 +111,7 @@ public class UserService : IUserService
     {
         string sql = @"SELECT * FROM Users";
 
-        using (var con = new MySqlConnection(_connectionString))
+        using (var con = Connection)
         {
             return con.Query<User>(sql);
         }
@@ -116,49 +119,77 @@ public class UserService : IUserService
 
     public User? GetById(long id)
     {
-        var parameters = new
-        {
-            id 
-        };
+        var parameters = new { id };
 
-        using (var con = new MySqlConnection(_connectionString))
+        using (var con = Connection)
         {
             con.Open();
-
             const string sql = "SELECT * FROM Users WHERE Id = @id";
-            var user = con.QuerySingleOrDefault<User>(sql, parameters);
-
-            return user;
+            return con.QuerySingleOrDefault<User>(sql, parameters);
         }
+    }
+
+    private bool VerifyIfUserExists(IDbConnection con, long id)
+    {
+        var parameters = new { id };
+
+        const string sql = "SELECT * FROM Users WHERE Id = @id";
+        var user = con.QuerySingleOrDefault<User>(sql, parameters);
+
+        if (user is null)
+            throw new NotFoundException($"User for Id: {id} could not be found.");
+
+        return true;
     }
 
     public void UpdateUser(long id, User user)
     {
-        GetById(id);
-
-        user.UpdatedAt = DateTime.Now;
-        var parameters = new
+        using (var con = Connection)
         {
-            id,
-            user.FirstName,
-            user.LastName,
-            user.Age,
-            user.Email,
-            user.Nickname,
-            user.UpdatedAt
-        };
+            con.Open();
 
-        using (var con = new MySqlConnection(_connectionString))
-        {
-            const string sql = "UPDATE Users SET FirstName = @FirstName, LastName = @LastName, Age = @Age, Email = @Email," +
-                "Nickname = @Nickname, UpdatedAt = @UpdatedAt WHERE Id = @Id";
+            using (var transaction = con.BeginTransaction())
+            {
+                VerifyIfUserExists(con, id);
 
-            con.Execute(sql, parameters);
+                user.UpdatedAt = DateTime.Now;
+                var parameters = new
+                {
+                    id,
+                    user.FirstName,
+                    user.LastName,
+                    user.Age,
+                    user.Email,
+                    user.NickName,
+                    user.UpdatedAt
+                };
+
+                const string sql = "UPDATE Users SET FirstName = @FirstName, LastName = @LastName, Age = @Age, " +
+                    "Email = @Email, Nickname = @Nickname, UpdatedAt = @UpdatedAt WHERE Id = @Id";
+
+                con.Execute(sql, parameters, transaction);
+                transaction.Commit();
+            }
         }
     }
 
     public void DeleteUser(long id)
     {
-        throw new NotImplementedException();
+        using (var con = Connection)
+        {
+            con.Open();
+
+            using (var transaction = con.BeginTransaction())
+            {
+                VerifyIfUserExists(con, id);
+
+                var parameters = new { id };
+
+                const string sql = "DELETE FROM Users WHERE Id = @Id";
+                con.Execute(sql, parameters, transaction);
+
+                transaction.Commit();
+            }
+        }
     }
 }
