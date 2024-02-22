@@ -8,6 +8,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddScoped<IUserAppService, UserAppService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddAutoMapperConfiguration();
+builder.Services.AddMvcConfiguration();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
@@ -55,6 +56,19 @@ app.MapPut("/users/{id}", (IUserAppService userAppService, long id, UpdateUserRe
     {
         return Results.BadRequest($"{ex.Message}");
     } catch (NotFoundException ex)
+    {
+        return Results.NotFound($"{ex.Message}");
+    }
+});
+
+app.MapDelete("/users/{id}", (IUserAppService userAppService, long id) =>
+{
+    try
+    {
+        userAppService.DeleteUser(id);
+        return Results.NoContent();
+    }
+    catch (NotFoundException ex)
     {
         return Results.NotFound($"{ex.Message}");
     }
